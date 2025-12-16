@@ -1,558 +1,536 @@
 <!DOCTYPE html>
 <html>
-<head>
-    <title>GeoGuessr Ultimate: French + Stars</title>
+  <head>
+    <title>GeoGuessr + Menu & Difficulty</title>
     <style>
-        body, html { height: 100%; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; overflow: hidden; }
-        
-        /* --- MAP STYLES --- */
-        #pano { height: 100%; width: 100%; position: absolute; top: 0; left: 0; z-index: 1; }
-        
-        #score-bar {
-            position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
-            z-index: 20; background: rgba(0,0,0,0.8); color: white;
-            padding: 15px 30px; border-radius: 30px; font-size: 18px; font-weight: bold;
-            display: none; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-        }
-        
-        #game-ui {
-            position: absolute; bottom: 20px; right: 20px; z-index: 10;
-            background: white; padding: 10px; border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
-            width: 380px; height: 320px;
-            display: flex; flex-direction: column;
-            transition: all 0.3s ease;
-        }
-        #game-ui:hover { width: 500px; height: 400px; }
+      body, html { height: 100%; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; overflow: hidden; }
+      
+      /* --- MAP STYLES --- */
+      #pano { height: 100%; width: 100%; position: absolute; top: 0; left: 0; z-index: 1; }
+      
+      #score-bar {
+        position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
+        z-index: 20; background: rgba(0,0,0,0.8); color: white;
+        padding: 15px 30px; border-radius: 30px; font-size: 18px; font-weight: bold;
+        display: none; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+      }
+      
+      #game-ui {
+        position: absolute; bottom: 20px; right: 20px; z-index: 10;
+        background: white; padding: 10px; border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+        width: 380px; height: 320px;
+        display: flex; flex-direction: column;
+        transition: all 0.3s ease;
+      }
+      #game-ui:hover { width: 500px; height: 400px; }
 
-        #mini-map { flex-grow: 1; width: 100%; border-radius: 8px; cursor: crosshair; }
+      #mini-map { flex-grow: 1; width: 100%; border-radius: 8px; cursor: crosshair; }
 
-        #controls { margin-top: 10px; display: flex; gap: 10px; }
-        
-        button.game-btn {
-            flex: 1; padding: 12px; font-size: 13px; font-weight: bold;
-            cursor: pointer; border: none; border-radius: 6px; color: white;
-            text-transform: uppercase; letter-spacing: 1px;
-        }
-        
-        #guess-btn { background: #e74c3c; flex: 2; }
-        #guess-btn:hover { background: #c0392b; }
+      #controls { margin-top: 10px; display: flex; gap: 10px; }
+      
+      button.game-btn {
+        flex: 1; padding: 12px; font-size: 13px; font-weight: bold;
+        cursor: pointer; border: none; border-radius: 6px; color: white;
+        text-transform: uppercase; letter-spacing: 1px;
+      }
+      
+      #guess-btn { background: #e74c3c; flex: 2; }
+      #guess-btn:hover { background: #c0392b; }
 
-        #hint-btn { background: #f1c40f; color: #333; flex: 1; }
-        #hint-btn:hover { background: #f39c12; }
-        
-        #next-btn { background: #2ecc71; display: none; width: 100%; }
-        #next-btn:hover { background: #27ae60; }
+      #hint-btn { background: #f1c40f; color: #333; flex: 1; }
+      #hint-btn:hover { background: #f39c12; }
+      
+      #next-btn { background: #2ecc71; display: none; width: 100%; }
+      #next-btn:hover { background: #27ae60; }
 
-        /* --- START & SUMMARY SCREENS --- */
-        #start-screen, #summary-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(44, 62, 80, 1); z-index: 3000;
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-            color: white;
-        }
-        #summary-overlay { background: rgba(0,0,0,0.9); display: none; } /* Hidden initially */
+      /* --- DIFFICULTY START SCREEN --- */
+      #start-screen {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(44, 62, 80, 1); z-index: 3000;
+        display: flex; flex-direction: column; justify-content: center; align-items: center;
+        color: white;
+      }
+      #start-screen h1 { font-size: 48px; margin-bottom: 10px; }
+      #start-screen p { font-size: 18px; margin-bottom: 40px; color: #bdc3c7; }
+      
+      .diff-btn {
+        width: 300px; padding: 20px; margin: 10px;
+        font-size: 20px; font-weight: bold; border: none; border-radius: 10px;
+        cursor: pointer; transition: transform 0.2s;
+      }
+      .diff-btn:hover { transform: scale(1.05); }
+      
+      #btn-easy { background: #2ecc71; color: white; } 
+      #btn-medium { background: #f1c40f; color: #2c3e50; } 
+      #btn-hard { background: #e74c3c; color: white; }
 
-        .screen-content { text-align: center; background: #34495e; padding: 40px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        
-        h1 { font-size: 48px; margin-bottom: 10px; margin-top: 0; }
-        p { font-size: 18px; margin-bottom: 30px; color: #bdc3c7; }
-        
-        .diff-btn, .restart-btn {
-            width: 300px; padding: 20px; margin: 10px;
-            font-size: 20px; font-weight: bold; border: none; border-radius: 10px;
-            cursor: pointer; transition: transform 0.2s; display: block;
-        }
-        .diff-btn:hover, .restart-btn:hover { transform: scale(1.05); }
-        
-        #btn-easy { background: #2ecc71; color: white; } 
-        #btn-medium { background: #f1c40f; color: #2c3e50; } 
-        #btn-hard { background: #e74c3c; color: white; }
-        .restart-btn { background: #3498db; color: white; margin: 20px auto 0 auto; }
+      /* --- SIDE MENU --- */
+      #menu-toggle {
+        position: absolute; top: 20px; left: 20px; z-index: 25;
+        background: #2c3e50; color: white; padding: 10px 15px;
+        border-radius: 5px; cursor: pointer; font-size: 20px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+      }
+      
+      #side-menu {
+        height: 100%; width: 0; position: fixed; z-index: 200;
+        top: 0; left: 0; background-color: #2c3e50;
+        overflow-x: hidden; transition: 0.3s; padding-top: 60px;
+        box-shadow: 2px 0 5px rgba(0,0,0,0.5);
+      }
+      
+      #side-menu h2 { color: white; text-align: center; margin-bottom: 30px; }
 
-        /* --- STARS STYLING --- */
-        #final-stars { font-size: 60px; color: #f1c40f; margin: 20px 0; letter-spacing: 5px; }
-        #final-score-text { font-size: 24px; font-weight: bold; }
+      #side-menu button {
+        padding: 15px; text-decoration: none; font-size: 18px;
+        color: white; display: block; transition: 0.3s;
+        background: none; border: none; width: 100%; text-align: left;
+        padding-left: 30px; cursor: pointer; border-bottom: 1px solid #34495e;
+      }
+      #side-menu button:hover { background-color: #34495e; }
 
-        /* --- SIDE MENU --- */
-        #menu-toggle {
-            position: absolute; top: 20px; left: 20px; z-index: 25;
-            background: #2c3e50; color: white; padding: 10px 15px;
-            border-radius: 5px; cursor: pointer; font-size: 20px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-        }
-        #side-menu {
-            height: 100%; width: 0; position: fixed; z-index: 200;
-            top: 0; left: 0; background-color: #2c3e50;
-            overflow-x: hidden; transition: 0.3s; padding-top: 60px;
-            box-shadow: 2px 0 5px rgba(0,0,0,0.5);
-        }
-        #side-menu h2 { color: white; text-align: center; margin-bottom: 30px; }
-        #side-menu button {
-            padding: 15px; text-decoration: none; font-size: 18px;
-            color: white; display: block; transition: 0.3s;
-            background: none; border: none; width: 100%; text-align: left;
-            padding-left: 30px; cursor: pointer; border-bottom: 1px solid #34495e;
-        }
-        #side-menu button:hover { background-color: #34495e; }
-        .closebtn {
-            position: absolute; top: 0; right: 25px; font-size: 36px !important;
-            margin-left: 50px; text-align: right !important; padding: 0 !important;
-            background: transparent !important; border: none !important;
-        }
+      .closebtn {
+        position: absolute; top: 0; right: 25px; font-size: 36px !important;
+        margin-left: 50px; text-align: right !important; padding: 0 !important;
+        background: transparent !important; border: none !important;
+      }
 
-        /* --- FRENCH QUIZ MODAL STYLES --- */
-        #quiz-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9); z-index: 2000;
-            display: none;
-            justify-content: center; align-items: center;
-        }
-        #quiz-box {
-            background: white; padding: 30px; border-radius: 15px;
-            text-align: center; width: 500px;
-            box-shadow: 0 0 25px rgba(255, 255, 255, 0.2);
-        }
-        #quiz-header { color: #e67e22; font-weight: bold; letter-spacing: 1px; margin-bottom: 5px; }
-        #question-text { font-size: 28px; margin-bottom: 25px; color: #000; font-weight: bold; }
-        #options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+      /* --- FRENCH QUIZ MODAL STYLES --- */
+      #quiz-overlay {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.9); z-index: 2000;
+        display: none;
+        justify-content: center; align-items: center;
+      }
+      #quiz-box {
+        background: white; padding: 30px; border-radius: 15px;
+        text-align: center; width: 500px;
+        box-shadow: 0 0 25px rgba(255, 255, 255, 0.2);
+      }
+      #quiz-header { color: #e67e22; font-weight: bold; letter-spacing: 1px; margin-bottom: 5px; }
+      #question-text { font-size: 28px; margin-bottom: 25px; color: #000; font-weight: bold; }
+      #options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
 
-        .option-btn {
-            padding: 15px; font-size: 20px; cursor: pointer;
-            background: #f1f2f6; border: 2px solid #ccc; border-radius: 8px;
-            transition: all 0.2s; color: #333; font-weight: bold;
-        }
-        .option-btn:hover { background: #dfe4ea; border-color: #999; }
-        .correct-btn { background: #2ecc71 !important; border-color: #27ae60 !important; color: white !important; }
-        .wrong-btn { background: #e74c3c !important; border-color: #c0392b !important; color: white !important; opacity: 0.6; }
-        #quiz-feedback { margin-top:15px; font-weight:bold; height:20px; font-size: 18px; }
+      .option-btn {
+        padding: 15px; font-size: 20px; cursor: pointer;
+        background: #f1f2f6; border: 2px solid #ccc; border-radius: 8px;
+        transition: all 0.2s; color: #333; font-weight: bold;
+      }
+      .option-btn:hover { background: #dfe4ea; border-color: #999; }
+      .correct-btn { background: #2ecc71 !important; border-color: #27ae60 !important; color: white !important; }
+      .wrong-btn { background: #e74c3c !important; border-color: #c0392b !important; color: white !important; opacity: 0.6; }
+      #quiz-feedback { margin-top:15px; font-weight:bold; height:20px; font-size: 18px; }
 
-        /* --- LOADER --- */
-        #loader {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: #1a1a1a; z-index: 100; color: white;
-            display: none; flex-direction: column; justify-content: center; align-items: center;
-        }
-        .spinner {
-            width: 40px; height: 40px; border: 4px solid #f3f3f3;
-            border-top: 4px solid #e74c3c; border-radius: 50%;
-            animation: spin 1s linear infinite; margin-bottom: 20px;
-        }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+      /* --- LOADER --- */
+      #loader {
+        position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+        background: #1a1a1a; z-index: 100; color: white;
+        display: none; 
+        flex-direction: column; justify-content: center; align-items: center;
+      }
+      .spinner {
+        width: 40px; height: 40px; border: 4px solid #f3f3f3;
+        border-top: 4px solid #e74c3c; border-radius: 50%;
+        animation: spin 1s linear infinite; margin-bottom: 20px;
+      }
+      @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
-</head>
-<body>
+  </head>
+  <body>
 
     <div id="start-screen">
-        <h1>🌍 GeoGuessr: French Ed.</h1>
-        <p>Select your difficulty to begin</p>
-        <button id="btn-easy" class="diff-btn">🟢 EASY<br><span style="font-size:14px; font-weight:normal">Famous Landmarks</span></button>
-        <button id="btn-medium" class="diff-btn">🟡 MEDIUM<br><span style="font-size:14px; font-weight:normal">Major World Cities</span></button>
-        <button id="btn-hard" class="diff-btn">🔴 HARD<br><span style="font-size:14px; font-weight:normal">Random Remote Locations</span></button>
-    </div>
-
-    <div id="summary-overlay">
-        <div class="screen-content">
-            <h1>GAME OVER</h1>
-            <div id="final-stars">★★☆☆☆</div>
-            <div id="final-score-text">Total Score: <span id="final-score-val">0</span> / 25,000</div>
-            <button class="restart-btn">Play Again</button>
-        </div>
+      <h1>🌍 GeoGuessr: French Ed.</h1>
+      <p>Select your difficulty to begin</p>
+      
+      <button id="btn-easy" class="diff-btn" onclick="startGame('easy')">
+        🟢 EASY<br><span style="font-size:14px; font-weight:normal">Famous Landmarks</span>
+      </button>
+      
+      <button id="btn-medium" class="diff-btn" onclick="startGame('medium')">
+        🟡 MEDIUM<br><span style="font-size:14px; font-weight:normal">Major World Cities</span>
+      </button>
+      
+      <button id="btn-hard" class="diff-btn" onclick="startGame('hard')">
+        🔴 HARD<br><span style="font-size:14px; font-weight:normal">Random Remote Locations</span>
+      </button>
     </div>
 
     <div id="menu-toggle" onclick="openNav()">☰ Menu</div>
     <div id="side-menu">
-        <button class="closebtn" onclick="closeNav()">×</button>
-        <h2>Change Difficulty</h2>
-        <button onclick="changeDifficulty('easy')">🟢 Easy</button>
-        <button onclick="changeDifficulty('medium')">🟡 Medium</button>
-        <button onclick="changeDifficulty('hard')">🔴 Hard</button>
-        <div style="margin-top:20px; padding:20px; color:#95a5a6; font-size:14px; text-align:center;">Changing difficulty resets your score.</div>
+      <button class="closebtn" onclick="closeNav()">×</button>
+      <h2>Change Difficulty</h2>
+      <button onclick="changeDifficulty('easy')">🟢 Easy</button>
+      <button onclick="changeDifficulty('medium')">🟡 Medium</button>
+      <button onclick="changeDifficulty('hard')">🔴 Hard</button>
+      <div style="margin-top:20px; padding:20px; color:#95a5a6; font-size:14px; text-align:center;">
+        Changing difficulty will reset the current round.
+      </div>
     </div>
 
     <div id="quiz-overlay">
-        <div id="quiz-box">
-            <div id="quiz-header">FRENCH CHECKPOINT</div>
-            <h2 id="progress-text">Question 1 / 2</h2>
-            <p>Complete the sentence (Verb: <b>Aller</b>)</p>
-            <h3 id="question-text">Je ______ au cinéma.</h3>
-            <div id="options-grid"></div>
-            <div id="quiz-feedback"></div>
-        </div>
+      <div id="quiz-box">
+        <div id="quiz-header">FRENCH CHECKPOINT</div>
+        <h2 id="progress-text">Question 1 / 2</h2>
+        <p>Complete the sentence (Verb: <b>Aller</b>)</p>
+        <h3 id="question-text">Je ______ au cinéma.</h3>
+        <div id="options-grid"></div>
+        <div id="quiz-feedback"></div>
+      </div>
     </div>
 
     <div id="loader">
-        <div class="spinner"></div>
-        <div id="status">Loading location...</div>
+      <div class="spinner"></div>
+      <div id="status">Loading location...</div>
     </div>
 
     <div id="score-bar"></div>
     <div id="pano"></div>
 
     <div id="game-ui">
-        <div id="mini-map"></div>
-        <div id="controls">
-            <button class="game-btn" id="hint-btn">Hint</button>
-            <button class="game-btn" id="guess-btn">Make Guess</button>
-            <button class="game-btn" id="next-btn">Next Location</button>
-        </div>
+      <div id="mini-map"></div>
+      <div id="controls">
+        <button class="game-btn" id="hint-btn" onclick="useHint()">Hint</button>
+        <button class="game-btn" id="guess-btn" onclick="submitGuess()">Make Guess</button>
+        <button class="game-btn" id="next-btn" onclick="handleNextClick()">Next Location</button>
+      </div>
     </div>
 
     <script>
-        // ===============================================
-        // 🔑 CONFIGURATION: IMPORTANT CHANGE THIS URL!
-        // When running locally, use 'http://localhost:3000'.
-        // When deployed, use your live Render URL (e.g., 'https://geoguessr-backend-xyz.onrender.com')
-        // ===============================================
-        const BACKEND_API_URL = 'http://localhost:3000'; 
+      // 🔑 THE CRITICAL FIX: Your live Backend API URL on Render
+      const BACKEND_API_URL = 'https://backend-2-n6uo.onrender.com';
 
-        let panorama, miniMap, geocoder;
-        let actualLoc = null;
-        let actualCountryName = ""; 
-        let guessMarker = null;
-        let actualMarker = null;
-        let resultLine = null;
-        let hintCircle = null; 
+      let panorama, miniMap, geocoder;
+      let actualLoc = null;
+      let actualCountryName = ""; 
+      let guessMarker = null;
+      let actualMarker = null;
+      let resultLine = null;
+      let hintCircle = null; 
+      
+      let roundCount = 1; 
+      let quizQuestionsSolved = 0; 
+      let currentDifficulty = 'hard'; 
 
-        let roundCount = 1; 
-        const maxRounds = 5;
-        let totalGameScore = 0;
-        let quizQuestionsSolved = 0; 
-        let currentDifficulty = 'hard'; 
+      // --- DATA LISTS ---
+      const easyLocations = [
+        { lat: 48.8584, lng: 2.2945 }, { lat: 40.6892, lng: -74.0445 }, 
+        { lat: 41.8902, lng: 12.4922 }, { lat: -33.8568, lng: 151.2153 }, 
+        { lat: 27.1751, lng: 78.0421 }, { lat: 51.5007, lng: -0.1246 }, 
+        { lat: 29.9792, lng: 31.1342 }, { lat: 43.7230, lng: 10.3966 }, 
+        { lat: 35.6586, lng: 139.7454 }, { lat: 37.8199, lng: -122.4783 }, 
+        { lat: 55.7520, lng: 37.6175 } 
+      ];
 
-        // --- QUIZ DATA ---
-        const frenchData = [
-            { sentence: "Je ___ au parc.", answer: "vais", options: ["vais", "vas", "va", "allons"] },
-            { sentence: "Tu ___ à la plage.", answer: "vas", options: ["vas", "vais", "va", "allez"] },
-            { sentence: "Il ___ à l'école.", answer: "va", options: ["va", "vas", "vont", "vais"] },
-            { sentence: "Nous ___ voyager.", answer: "allons", options: ["allons", "allez", "vont", "vas"] },
-            { sentence: "Vous ___ bien ?", answer: "allez", options: ["allez", "allons", "avez", "va"] },
-            { sentence: "Ils ___ au stade.", answer: "vont", options: ["vont", "allons", "va", "vas"] },
-            { sentence: "Elles ___ voir un film.", answer: "vont", options: ["vont", "vais", "allez", "va"] },
-            { sentence: "On ___ manger ce soir.", answer: "va", options: ["va", "vas", "vont", "allez"] }
-        ];
+      const mediumCities = [
+        { lat: 51.5074, lng: -0.1278 }, { lat: 40.7128, lng: -74.0060 }, 
+        { lat: 35.6762, lng: 139.6503 }, { lat: 48.8566, lng: 2.3522 }, 
+        { lat: 52.5200, lng: 13.4050 }, { lat: -33.8688, lng: 151.2093 }, 
+        { lat: 43.6532, lng: -79.3832 }, { lat: -22.9068, lng: -43.1729 }, 
+        { lat: 37.5665, lng: 126.9780 }, { lat: 41.9028, lng: 12.4964 }, 
+        { lat: 19.4326, lng: -99.1332 }, { lat: 55.7558, lng: 37.6173 }, 
+        { lat: 34.0522, lng: -118.2437 }, { lat: 1.3521, lng: 103.8198 }, 
+        { lat: 41.3851, lng: 2.1734 }
+      ];
 
-        let currentQuestionObj = null;
+      const frenchData = [
+        { sentence: "Je ___ au parc.", answer: "vais", options: ["vais", "vas", "va", "allons"] },
+        { sentence: "Tu ___ à la plage.", answer: "vas", options: ["vas", "vais", "va", "allez"] },
+        { sentence: "Il ___ à l'école.", answer: "va", options: ["va", "vas", "vont", "vais"] },
+        { sentence: "Elle ___ au magasin.", answer: "va", options: ["va", "vas", "allez", "vont"] },
+        { sentence: "Nous ___ voyager.", answer: "allons", options: ["allons", "allez", "vont", "vas"] },
+        { sentence: "Vous ___ bien ?", answer: "allez", options: ["allez", "allons", "avez", "va"] },
+        { sentence: "Ils ___ au stade.", answer: "vont", options: ["vont", "allons", "va", "vas"] },
+        { sentence: "Elles ___ voir un film.", answer: "vont", options: ["vont", "vais", "allez", "va"] },
+        { sentence: "On ___ manger ce soir.", answer: "va", options: ["va", "vas", "vont", "allez"] }
+      ];
 
-        // --- MENU LOGIC ---
-        function openNav() { document.getElementById("side-menu").style.width = "250px"; }
-        function closeNav() { document.getElementById("side-menu").style.width = "0"; }
+      let currentQuestionObj = null;
 
-        function startGame(difficulty) {
-            currentDifficulty = difficulty;
-            document.getElementById('start-screen').style.display = 'none';
-            
-            if (!geocoder) {
-                geocoder = new google.maps.Geocoder();
-                panorama = new google.maps.StreetViewPanorama(
-                    document.getElementById("pano"), {
-                        showRoadLabels: false, addressControl: false, disableDefaultUI: true, clickToGo: true, zoom: 0
-                    }
-                );
+      // --- MENU LOGIC ---
+      function openNav() {
+        document.getElementById("side-menu").style.width = "250px";
+      }
 
-                miniMap = new google.maps.Map(document.getElementById("mini-map"), {
-                    center: { lat: 20, lng: 0 },
-                    zoom: 1,
-                    disableDefaultUI: true,
-                    clickableIcons: false
-                });
+      function closeNav() {
+        document.getElementById("side-menu").style.width = "0";
+      }
 
-                miniMap.addListener("click", (e) => {
-                    if (document.getElementById("next-btn").style.display === "block") return;
-                    if (guessMarker) guessMarker.setMap(null);
-                    guessMarker = new google.maps.Marker({ position: e.latLng, map: miniMap });
-                });
-            }
+      function startGame(difficulty) {
+        currentDifficulty = difficulty;
+        document.getElementById('start-screen').style.display = 'none';
+        
+        geocoder = new google.maps.Geocoder();
+        panorama = new google.maps.StreetViewPanorama(
+          document.getElementById("pano"), {
+            showRoadLabels: false, addressControl: false, disableDefaultUI: true, clickToGo: true, zoom: 0
+          }
+        );
 
-            startNewRound();
-        }
-
-        function changeDifficulty(difficulty) {
-            currentDifficulty = difficulty;
-            totalGameScore = 0; // Reset score
-            roundCount = 1; 
-            closeNav(); 
-            startNewRound();
-        }
-
-        function restartGame() {
-            totalGameScore = 0;
-            roundCount = 1;
-            document.getElementById("summary-overlay").style.display = "none";
-            document.getElementById("start-screen").style.display = "flex";
-        }
-
-        // --- GAME LOGIC ---
-        function startNewRound() {
-            document.getElementById("loader").style.display = "flex";
-            document.getElementById("status").innerText = `Round ${roundCount} / ${maxRounds}: Loading location...`;
-            document.getElementById("score-bar").style.display = "none";
-            
-            document.getElementById("guess-btn").style.display = "block";
-            document.getElementById("hint-btn").style.display = "block";
-            document.getElementById("hint-btn").disabled = false;
-            document.getElementById("hint-btn").innerText = "HINT";
-            document.getElementById("hint-btn").style.opacity = "1";
-            document.getElementById("next-btn").style.display = "none";
-
-            if (guessMarker) guessMarker.setMap(null);
-            if (actualMarker) actualMarker.setMap(null);
-            if (resultLine) resultLine.setMap(null);
-            if (hintCircle) hintCircle.setMap(null);
-            
-            guessMarker = null;
-            hintCircle = null;
-            actualCountryName = "";
-
-            miniMap.setCenter({ lat: 20, lng: 0 });
-            miniMap.setZoom(1);
-
-            fetchLocationFromBackend();
-        }
-
-        async function fetchLocationFromBackend() {
-            try {
-                // Calls the '/game-data' route on your Node.js server
-                const response = await fetch(`${BACKEND_API_URL}/game-data?difficulty=${currentDifficulty}`);
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP error! Status: ${response.status}`);
-                }
-                
-                const data = await response.json();
-                
-                const latLng = { lat: data.latitude, lng: data.longitude };
-                
-                // This checks if StreetView is available at the coordinate sent by the backend
-                validateLocation(latLng);
-
-            } catch (error) {
-                console.error("Error fetching location from backend. Is the server running?", error);
-                document.getElementById("status").innerText = "Error: Could not connect to server.";
-            }
-        }
-
-
-        function validateLocation(latLng) {
-            const svService = new google.maps.StreetViewService();
-            svService.getPanorama({
-                location: latLng, radius: 50, source: google.maps.StreetViewSource.OUTDOOR
-            }, (data, status) => {
-                if (status === "OK") {
-                    geocoder.geocode({ location: latLng }, (results, geoStatus) => {
-                        if (geoStatus === "OK" && results[0]) {
-                            const countryComponent = results[0].address_components.find(c => c.types.includes("country"));
-                            if (countryComponent) {
-                                actualLoc = latLng;
-                                actualCountryName = countryComponent.long_name;
-                                panorama.setPosition(actualLoc);
-                                panorama.setPov({ heading: Math.random() * 360, pitch: 0 });
-                                document.getElementById("loader").style.display = "none";
-                            } else fetchLocationFromBackend(); // Retry if country isn't found
-                        } else fetchLocationFromBackend(); // Retry if geocoding fails
-                    });
-                } else {
-                    console.log("StreetView not available, fetching new location from backend.");
-                    fetchLocationFromBackend(); // Ask backend for a new one
-                }
-            });
-        }
-
-
-        // --- HINT, QUIZ, GUESS LOGIC ---
-        function useHint() {
-            if(!actualLoc) return;
-            const offsetDistance = Math.random() * 900000; 
-            const offsetHeading = Math.random() * 360;
-            const circleCenter = google.maps.geometry.spherical.computeOffset(actualLoc, offsetDistance, offsetHeading);
-
-            hintCircle = new google.maps.Circle({
-                strokeColor: "#f39c12", strokeOpacity: 0.8, strokeWeight: 2,
-                fillColor: "#f1c40f", fillOpacity: 0.20, map: miniMap,
-                center: circleCenter, radius: 1000000, clickable: false      
-            });
-            miniMap.fitBounds(hintCircle.getBounds());
-            const btn = document.getElementById("hint-btn");
-            btn.disabled = true; btn.style.opacity = "0.5"; btn.innerText = "Used";
-        }
-
-        function handleNextClick() {
-            if (roundCount === maxRounds) {
-                showSummaryScreen();
-            } else if (roundCount % 2 === 0) {
-                quizQuestionsSolved = 0;
-                setupQuiz();
-            } else {
-                roundCount++;
-                startNewRound();
-            }
-        }
-
-        function showSummaryScreen() {
-            const starEl = document.getElementById("final-stars");
-            const scoreEl = document.getElementById("final-score-val");
-            
-            let stars = "";
-            if (totalGameScore > 22500) stars = "★★★★★";
-            else if (totalGameScore > 18000) stars = "★★★★☆";
-            else if (totalGameScore > 12000) stars = "★★★☆☆";
-            else if (totalGameScore > 5000) stars = "★★☆☆☆";
-            else stars = "★☆☆☆☆";
-
-            starEl.innerText = stars;
-            scoreEl.innerText = totalGameScore.toLocaleString();
-            document.getElementById("summary-overlay").style.display = "flex";
-            
-            sendFinalScore(totalGameScore);
-        }
-
-        async function sendFinalScore(score) {
-            try {
-                const playerName = "Player_1"; // To be updated later with user input
-                
-                const response = await fetch(`${BACKEND_API_URL}/save-score`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ playerName: playerName, score: score })
-                });
-
-                if (response.ok) {
-                    console.log("Score successfully saved on the backend!");
-                } else {
-                    console.error("Failed to save score on the backend.");
-                }
-            } catch (error) {
-                console.error("Error connecting to backend to save score:", error);
-            }
-        }
-
-
-        function setupQuiz() {
-            const r = Math.floor(Math.random() * frenchData.length);
-            currentQuestionObj = frenchData[r];
-            let shuffledOptions = [...currentQuestionObj.options];
-            shuffledOptions.sort(() => Math.random() - 0.5);
-
-            document.getElementById("progress-text").innerText = `Question ${quizQuestionsSolved + 1} / 2`;
-            document.getElementById("question-text").innerText = currentQuestionObj.sentence;
-            document.getElementById("quiz-feedback").innerText = "";
-
-            const grid = document.getElementById("options-grid");
-            grid.innerHTML = ""; 
-
-            shuffledOptions.forEach(opt => {
-                const btn = document.createElement("button");
-                btn.className = "option-btn";
-                btn.innerText = opt;
-                btn.onclick = () => checkAnswer(btn, opt);
-                grid.appendChild(btn);
-            });
-            document.getElementById("quiz-overlay").style.display = "flex";
-        }
-
-        function checkAnswer(btnElement, selectedOption) {
-            const feedback = document.getElementById("quiz-feedback");
-            if (selectedOption === currentQuestionObj.answer) {
-                btnElement.classList.add("correct-btn");
-                quizQuestionsSolved++;
-                if (quizQuestionsSolved < 2) {
-                    feedback.style.color = "#27ae60";
-                    feedback.innerText = "Correct! Next question...";
-                    setTimeout(() => { setupQuiz(); }, 1000);
-                } else {
-                    feedback.style.color = "#2ecc71";
-                    feedback.innerText = "CHECKPOINT CLEARED!";
-                    setTimeout(() => {
-                        document.getElementById("quiz-overlay").style.display = "none";
-                        roundCount++;
-                        startNewRound();
-                    }, 1500);
-                }
-            } else {
-                btnElement.classList.add("wrong-btn");
-                feedback.style.color = "#c0392b";
-                feedback.innerText = "Incorrect, try again.";
-            }
-        }
-
-        function submitGuess() {
-            if (!guessMarker) {
-                alert("Click the map to place your pin first!");
-                return;
-            }
-            const distKm = getDistanceFromLatLonInKm(
-                actualLoc.lat(), actualLoc.lng(),
-                guessMarker.getPosition().lat(), guessMarker.getPosition().lng()
-            );
-
-            let score = Math.round(5000 * Math.exp(-distKm / 2000));
-            if (distKm < 1) score = 5000;
-
-            totalGameScore += score; // Add to global score
-
-            const scoreBar = document.getElementById("score-bar");
-            scoreBar.innerHTML = `
-                <div>Location: <span style="color:#2ecc71">${actualCountryName}</span></div>
-                <div style="font-size:16px; margin-top:5px;">
-                    Distance: <b>${Math.round(distKm).toLocaleString()} km</b> | Round Score: <b>${score}</b>
-                </div>
-                <div style="font-size:14px; margin-top:5px; color: #f1c40f;">Total Score: ${totalGameScore}</div>
-            `;
-            scoreBar.style.display = "block";
-
-            actualMarker = new google.maps.Marker({
-                position: actualLoc, map: miniMap,
-                icon: 'http://maps.google.com/mapfiles/ms/icons/green-dot.png'
-            });
-
-            resultLine = new google.maps.Polyline({
-                path: [guessMarker.getPosition(), actualLoc],
-                geodesic: true, strokeColor: '#FF0000', strokeOpacity: 0.8, strokeWeight: 3, map: miniMap
-            });
-
-            const bounds = new google.maps.LatLngBounds();
-            bounds.extend(guessMarker.getPosition());
-            bounds.extend(actualLoc);
-            miniMap.fitBounds(bounds);
-
-            document.getElementById("guess-btn").style.display = "none";
-            document.getElementById("hint-btn").style.display = "none";
-            document.getElementById("next-btn").style.display = "block";
-        }
-
-        function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
-            var R = 6371;  
-            var dLat = deg2rad(lat2-lat1);    
-            var dLon = deg2rad(lon2-lon1);  
-            var a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * Math.sin(dLon/2) * Math.sin(dLon/2);  
-            var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));  
-            return R * c;
-        }
-        function deg2rad(deg) { return deg * (Math.PI/180) }
-
-
-        // ===============================================
-        // EVENT LISTENERS (Connects the buttons to the JS functions)
-        // ===============================================
-
-        document.addEventListener('DOMContentLoaded', () => {
-            // Start Screen Buttons
-            document.getElementById('btn-easy').addEventListener('click', () => startGame('easy'));
-            document.getElementById('btn-medium').addEventListener('click', () => startGame('medium'));
-            document.getElementById('btn-hard').addEventListener('click', () => startGame('hard'));
-
-            // Game Control Buttons
-            document.getElementById('guess-btn').addEventListener('click', submitGuess);
-            document.getElementById('hint-btn').addEventListener('click', useHint);
-            document.getElementById('next-btn').addEventListener('click', handleNextClick);
-            
-            // Summary and Menu Buttons
-            document.querySelector('.restart-btn').addEventListener('click', restartGame);
+        miniMap = new google.maps.Map(document.getElementById("mini-map"), {
+          center: { lat: 20, lng: 0 },
+          zoom: 1,
+          disableDefaultUI: true,
+          clickableIcons: false
         });
 
+        miniMap.addListener("click", (e) => {
+          if (document.getElementById("next-btn").style.display === "block") return;
+          if (guessMarker) guessMarker.setMap(null);
+          guessMarker = new google.maps.Marker({ position: e.latLng, map: miniMap });
+        });
+
+        startNewRound();
+      }
+
+      function changeDifficulty(difficulty) {
+        currentDifficulty = difficulty;
+        roundCount = 1; // Reset rounds
+        closeNav(); // Close menu
+        startNewRound(); // Restart game
+      }
+
+      // --- GAME LOGIC ---
+      function startNewRound() {
+        document.getElementById("loader").style.display = "flex";
+        document.getElementById("status").innerText = `Round ${roundCount}: Loading ${currentDifficulty} location...`;
+        document.getElementById("score-bar").style.display = "none";
+        
+        document.getElementById("guess-btn").style.display = "block";
+        document.getElementById("hint-btn").style.display = "block";
+        document.getElementById("hint-btn").disabled = false;
+        document.getElementById("hint-btn").innerText = "HINT";
+        document.getElementById("hint-btn").style.opacity = "1";
+        document.getElementById("next-btn").style.display = "none";
+
+        if (guessMarker) guessMarker.setMap(null);
+        if (actualMarker) actualMarker.setMap(null);
+        if (resultLine) resultLine.setMap(null);
+        if (hintCircle) hintCircle.setMap(null);
+        
+        guessMarker = null;
+        hintCircle = null;
+        actualCountryName = "";
+
+        miniMap.setCenter({ lat: 20, lng: 0 });
+        miniMap.setZoom(1);
+
+        findLocationBasedOnDifficulty();
+      }
+
+      async function findLocationBasedOnDifficulty() {
+        const svService = new google.maps.StreetViewService();
+        
+        let searchLoc = { lat: 0, lng: 0 };
+        let searchRadius = 100000; 
+
+        if (currentDifficulty === 'easy') {
+          const r = Math.floor(Math.random() * easyLocations.length);
+          searchLoc = easyLocations[r];
+          searchRadius = 1000; 
+        } else if (currentDifficulty === 'medium') {
+          const r = Math.floor(Math.random() * mediumCities.length);
+          searchLoc = mediumCities[r];
+          searchRadius = 5000; 
+        } else {
+          // 🚀 HARD MODE: GET LOCATION FROM YOUR LIVE BACKEND API
+          try {
+            const response = await fetch(`${BACKEND_API_URL}/game-data`);
+            if (!response.ok) {
+              throw new Error(`HTTP status: ${response.status}`);
+            }
+            const data = await response.json();
+            searchLoc = { lat: data.latitude, lng: data.longitude };
+            searchRadius = 100000; // Large radius for true random search
+          } catch (error) {
+            console.error("Backend API Error:", error);
+            document.getElementById("status").innerText = `ERROR: Could not connect to API. Falling back to local data.`;
+            // Fallback to local hard mode (if API fails)
+            const lat = (Math.random() * 140) - 70;
+            const lng = (Math.random() * 360) - 180;
+            searchLoc = { lat: lat, lng: lng };
+            searchRadius = 100000;
+          }
+        }
+
+        svService.getPanorama({
+          location: searchLoc,
+          radius: searchRadius, 
+          source: google.maps.StreetViewSource.OUTDOOR
+        }, (data, status) => {
+          if (status === "OK") {
+            validateLocation(data.location.latLng);
+          } else {
+            // If Street View fails, retry location logic
+            findLocationBasedOnDifficulty();
+          }
+        });
+      }
+
+      function validateLocation(latLng) {
+          geocoder.geocode({ location: latLng }, (results, status) => {
+            if (status === "OK" && results[0]) {
+               const countryComponent = results[0].address_components.find(c => c.types.includes("country"));
+               if (countryComponent) {
+                 actualLoc = latLng;
+                 actualCountryName = countryComponent.long_name;
+                 panorama.setPosition(actualLoc);
+                 panorama.setPov({ heading: Math.random() * 360, pitch: 0 });
+                 document.getElementById("loader").style.display = "none";
+               } else {
+                 findLocationBasedOnDifficulty(); // No country found, retry
+               }
+            } else {
+               findLocationBasedOnDifficulty(); // Geocoding failed, retry
+            }
+          });
+      }
+
+      // --- HINT, QUIZ, GUESS LOGIC ---
+      function useHint() {
+        if(!actualLoc) return;
+        const offsetDistance = Math.random() * 900000; 
+        const offsetHeading = Math.random() * 360;
+        const circleCenter = google.maps.geometry.spherical.computeOffset(actualLoc, offsetDistance, offsetHeading);
+
+        hintCircle = new google.maps.Circle({
+            strokeColor: "#f39c12", strokeOpacity: 0.8, strokeWeight: 2,
+            fillColor: "#f1c40f", fillOpacity: 0.20, map: miniMap,
+            center: circleCenter, radius: 1000000, clickable: false     
+        });
+        miniMap.fitBounds(hintCircle.getBounds());
+        const btn = document.getElementById("hint-btn");
+        btn.disabled = true; btn.style.opacity = "0.5"; btn.innerText = "Used";
+      }
+
+      function handleNextClick() {
+        if (roundCount % 2 === 0) {
+          quizQuestionsSolved = 0;
+          setupQuiz();
+        } else {
+          roundCount++;
+          startNewRound();
+        }
+      }
+
+      function setupQuiz() {
+        const r = Math.floor(Math.random() * frenchData.length);
+        currentQuestionObj = frenchData[r];
+        let shuffledOptions = [...currentQuestionObj.options];
+        shuffledOptions.sort(() => Math.random() - 0.5);
+
+        document.getElementById("progress-text").innerText = `Question ${quizQuestionsSolved + 1} / 2`;
+        document.getElementById("question-text").innerText = currentQuestionObj.sentence;
+        document.getElementById("quiz-feedback").innerText = "";
+
+        const grid = document.getElementById("options-grid");
+        grid.innerHTML = ""; 
+
+        shuffledOptions.forEach(opt => {
+            const btn = document.createElement("button");
+            btn.className = "option-btn";
+            btn.innerText = opt;
+            btn.onclick = () => checkAnswer(btn, opt);
+            grid.appendChild(btn);
+        });
+        document.getElementById("quiz-overlay").style.display = "flex";
+      }
+
+      function checkAnswer(btnElement, selectedOption) {
+        const feedback = document.getElementById("quiz-feedback");
+        if (selectedOption === currentQuestionObj.answer) {
+            btnElement.classList.add("correct-btn");
+            quizQuestionsSolved++;
+            if (quizQuestionsSolved < 2) {
+              feedback.style.color = "#27ae60";
+              feedback.innerText = "Correct! Next question...";
+              setTimeout(() => { setupQuiz(); }, 1000);
+            } else {
+              feedback.style.color = "#2ecc71";
+              feedback.innerText = "CHECKPOINT CLEARED!";
+              setTimeout(() => {
+                document.getElementById("quiz-overlay").style.display = "none";
+                roundCount++;
+                startNewRound();
+              }, 1500);
+            }
+        } else {
+            btnElement.classList.add("wrong-btn");
+            feedback.style.color = "#c0392b";
+            feedback.innerText = "Incorrect, try again.";
+        }
+      }
+
+      function submitGuess() {
+        if (!guessMarker) {
+          alert("Click the map to place your pin first!");
+          return;
+        }
+        const distKm = getDistanceFromLatLonInKm(
+          actualLoc.lat(), actualLoc.lng(),
+          guessMarker.getPosition().lat(), guessMarker.getPosition().lng()
+        );
+
+        let score = Math.round(5000 * Math.exp(-distKm / 2000));
+        if (distKm < 1) score = 5000;
+        
+        // Optional: Sending score to backend (as previously discussed)
+        sendScore(score); 
+
+        const scoreBar = document.getElementById("score-bar");
+        scoreBar.innerHTML = `
+          
+            <div>Location: <span style="color:#2ecc71">${actualCountryName}</span></div>
+            <div style="font-size:16px; margin-top:5px;">
+              Distance: <b>${Math.round(distKm).toLocaleString()} km</b> | Score: <b>${score}</b>
+            </div>
+        `;
+        scoreBar.style.display = "block";
+
+        actualMarker = new google.maps.Marker({
+          position: actualLoc, map: miniMap,
+          icon: 'http://maps.google.com/mapfiles/ms/icons/green-dot.png'
+        });
+
+        resultLine = new google.maps.Polyline({
+          path: [guessMarker.getPosition(), actualLoc],
+          geodesic: true, strokeColor: '#FF0000', strokeOpacity: 0.8, strokeWeight: 3, map: miniMap
+        });
+
+        const bounds = new google.maps.LatLngBounds();
+        bounds.extend(guessMarker.getPosition());
+        bounds.extend(actualLoc);
+        miniMap.fitBounds(bounds);
+
+        document.getElementById("guess-btn").style.display = "none";
+        document.getElementById("hint-btn").style.display = "none";
+        document.getElementById("next-btn").style.display = "block";
+      }
+
+      // Send score function (will attempt to call the backend endpoint)
+      async function sendScore(score) {
+          try {
+              await fetch(`${BACKEND_API_URL}/save-score`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ playerName: 'Player1', score: score }),
+              });
+          } catch (error) {
+              console.warn("Failed to save score to backend. Server might be down or unreachable.");
+          }
+      }
+
+      function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
+        var R = 6371; 
+        var dLat = deg2rad(lat2-lat1);  
+        var dLon = deg2rad(lon2-lon1); 
+        var a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * Math.sin(dLon/2) * Math.sin(dLon/2); 
+        var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
+        return R * c;
+      }
+      function deg2rad(deg) { return deg * (Math.PI/180) }
     </script>
+
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB41DRUbKWJHPxaFjMAwdrzWzbVKartNGg&libraries=geometry&v=weekly" async></script>
-</body>
+  </body>
 </html>
